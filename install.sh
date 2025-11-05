@@ -34,16 +34,26 @@ addUser() {
         if grep -q "^$username:" /etc/passwd; then
             echo " - Пользователь $username уже существует!"
             return 0
-        else
-            adduser -D -H -h "$dirInstall" -s /bin/false -G nogroup "$username"
-            if [ $? -eq 0 ]; then
-                chmod 755 "$dirInstall"
-                echo " - Пользователь $username добавлен!"
-            else
-                echo " - Не удалось добавить пользователя $username!"
-                return 1
-            fi
         fi
+
+        echo " - Добавляем пользователя $username..."
+
+        if command -v useradd >/dev/null 2>&1; then
+            useradd -r -s /bin/false -d "$dirInstall" -M "$username"
+        elif command -v adduser >/dev/null 2>&1; then
+            adduser -D -H -h "$dirInstall" -s /bin/false -G nogroup "$username"
+        else
+            echo " - Команды useradd/adduser не найдены, добавляем вручную"
+            next_uid=$(($(awk -F: 'END{print $3}' /etc/passwd) + 1))
+            echo "$username:x:${next_uid}:65534:$username:$dirInstall:/bin/false" >> /etc/passwd
+        fi
+
+        # Проверяем группу nogroup
+        grep -q "^nogroup:" /etc/group || echo "nogroup:x:65534:" >> /etc/group
+
+        chmod 755 "$dirInstall"
+        chown -R "$username:nogroup" "$dirInstall"
+        echo " - Пользователь $username добавлен и назначен владельцем $dirInstall"
     fi
 }
 
