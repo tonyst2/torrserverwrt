@@ -4,7 +4,7 @@ username="torrserver"
 dirInstall="/opt/torrserver"
 serviceName="torrserver"
 scriptname=$(basename "$0")
-architecture="arm64" # Для FriendlyWrt явно указываем архитектуру
+architecture="mipsle" # Для FriendlyWrt явно указываем архитектуру
 
 # Цвета для вывода
 RED='\033[0;31m'
